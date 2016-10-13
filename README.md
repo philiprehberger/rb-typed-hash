@@ -15,7 +15,7 @@ Hash with per-key type declarations, coercion, and validation
 Add to your Gemfile:
 
 ```ruby
-gem 'philiprehberger-typed_hash'
+gem "philiprehberger-typed_hash"
 ```
 
 Or install directly:
