@@ -27,7 +27,7 @@ gem install philiprehberger-typed_hash
 ## Usage
 
 ```ruby
-require 'philiprehberger/typed_hash'
+require "philiprehberger/typed_hash"
 
 UserSchema = Philiprehberger::TypedHash.define do
   key :name, String
