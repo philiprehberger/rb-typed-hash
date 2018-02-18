@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/rb-typed-hash/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-typed-hash/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-typed_hash.svg)](https://rubygems.org/gems/philiprehberger-typed_hash)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-typed-hash)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Hash with per-key type declarations, coercion, and validation
 
@@ -130,4 +131,4 @@ bundle exec rubocop
 
 ## License
 
-MIT
+[MIT](LICENSE)
