@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-03-31
+
+### Added
+- Add GitHub issue templates, dependabot config, and PR template
+
 ## [0.1.6] - 2026-03-31
 
 ### Changed
