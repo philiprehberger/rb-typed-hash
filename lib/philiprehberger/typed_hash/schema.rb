@@ -33,12 +33,37 @@ module Philiprehberger
         }
       end
 
+      # Define a nested typed hash schema
+      #
+      # @param name [Symbol] the key name
+      # @param optional [Boolean] whether the nested schema is optional
+      # @yield [schema] block receiving a new Schema for the nested hash
+      # @return [void]
+      def nested(name, optional: false, &block)
+        nested_schema = Schema.new(strict: @strict)
+        nested_schema.instance_eval(&block)
+        @fields[name] = {
+          type: Hash,
+          optional: optional,
+          nested_schema: nested_schema
+        }
+      end
+
       # Create a new typed hash instance from data
       #
       # @param data [Hash] the input data
       # @return [Instance] a typed hash instance
       def new(data = {})
         Instance.new(self, data)
+      end
+
+      # Deserialize a JSON string into a typed hash instance
+      #
+      # @param json_str [String] JSON string
+      # @return [Instance] a typed hash instance
+      def from_json(json_str)
+        data = JSON.parse(json_str, symbolize_names: true)
+        new(data)
       end
     end
   end

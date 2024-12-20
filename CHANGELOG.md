@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-03
+
+### Added
+- Nested schemas via `Schema#nested(name, optional:, &block)` for defining typed sub-hashes
+- `Instance#pick(*keys)` to return a new instance with only the specified keys
+- `Instance#omit(*keys)` to return a new instance without the specified keys
+- `Instance#to_json` for JSON serialization
+- `Schema#from_json(str)` for JSON deserialization
+- `Instance#freeze` to make an instance immutable (raises `FrozenError` on `[]=`)
+- `Instance#diff(other)` to compute changed keys between two instances
+- `Instance#[]=` setter for modifying values (respects freeze)
+
 ## [0.1.7] - 2026-03-31
 
 ### Added
