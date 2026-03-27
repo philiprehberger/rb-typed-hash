@@ -212,7 +212,7 @@ RSpec.describe Philiprehberger::TypedHash do
   describe 'coercion with type mismatch after coercion' do
     let(:schema) do
       Philiprehberger::TypedHash.define do
-        key :value, Integer, coerce: ->(v) { v.to_s }
+        key :value, Integer, coerce: lambda(&:to_s)
       end
     end
 
