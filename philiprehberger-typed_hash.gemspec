@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'Hash with per-key type declarations, coercion, and validation'
   spec.description = 'Define typed hash schemas with per-key type declarations, optional coercion functions, ' \
-                       'default values, strict mode for unknown keys, and validation error collection.'
+                     'default values, strict mode for unknown keys, and validation error collection.'
   spec.homepage = 'https://philiprehberger.com/open-source-packages/ruby/philiprehberger-typed_hash'
   spec.license = 'MIT'
 
