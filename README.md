@@ -4,7 +4,7 @@
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-typed_hash.svg)](https://rubygems.org/gems/philiprehberger-typed_hash)
 [![Last updated](https://img.shields.io/github/last-commit/philiprehberger/rb-typed-hash)](https://github.com/philiprehberger/rb-typed-hash/commits/main)
 
-Hash with per-key type declarations, coercion, and validation
+Hash with per-key type declarations, coercion, validation, nested schemas, and JSON serialization
 
 ## Requirements
 
@@ -87,6 +87,53 @@ instance.valid?   # => false
 instance.errors   # => ['unknown key: extra']
 ```
 
+### Nested Schemas
+
+```ruby
+schema = Philiprehberger::TypedHash.define do
+  key :name, String
+  nested :address do
+    key :street, String
+    key :city, String
+  end
+end
+
+user = schema.new(name: 'Alice', address: { street: '123 Main St', city: 'Springfield' })
+user[:address][:street]  # => '123 Main St'
+```
+
+### Pick and Omit
+
+```ruby
+full = schema.new(name: 'Alice', age: 30, email: 'alice@example.com')
+picked = full.pick(:name, :email)   # only :name and :email
+omitted = full.omit(:email)         # everything except :email
+```
+
+### JSON Serialization
+
+```ruby
+instance = schema.new(name: 'Alice', age: 30)
+json = instance.to_json              # => '{"name":"Alice","age":30}'
+restored = schema.from_json(json)    # => Instance
+```
+
+### Freeze
+
+```ruby
+instance = schema.new(name: 'Alice', age: 30)
+instance.freeze
+instance[:name] = 'Bob'  # => raises Philiprehberger::TypedHash::FrozenError
+```
+
+### Diff
+
+```ruby
+a = schema.new(name: 'Alice', age: 30)
+b = schema.new(name: 'Alice', age: 35)
+a.diff(b)  # => { age: { old: 30, new: 35 } }
+```
+
 ### Merging
 
 ```ruby
@@ -108,17 +155,26 @@ updated[:age]  # => 30
 | Method | Description |
 |--------|-------------|
 | `key :name, Type, opts` | Declare a typed key with options |
+| `nested :name, opts, &block` | Define a nested typed hash schema |
 | `#new(data)` | Create a typed hash instance |
+| `#from_json(str)` | Deserialize a JSON string into a typed hash instance |
 
 ### `Instance`
 
 | Method | Description |
 |--------|-------------|
 | `#[key]` | Access a value by key |
+| `#[key] = value` | Set a value by key (raises if frozen) |
 | `#valid?` | Check if the instance passes validation |
 | `#errors` | Return validation error messages |
 | `#to_h` | Convert to a plain hash |
+| `#to_json` | Serialize to a JSON string |
 | `#merge(other)` | Merge with another hash or instance |
+| `#pick(*keys)` | Return new instance with only the specified keys |
+| `#omit(*keys)` | Return new instance without the specified keys |
+| `#freeze` | Make the instance immutable |
+| `#frozen?` | Check if the instance is frozen |
+| `#diff(other)` | Return hash of changed keys with old and new values |
 
 ## Development
 

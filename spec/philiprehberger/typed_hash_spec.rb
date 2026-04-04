@@ -389,4 +389,239 @@ RSpec.describe Philiprehberger::TypedHash do
       expect(schema.fields[:name][:optional]).to be(true)
     end
   end
+
+  describe 'nested schemas' do
+    let(:schema) do
+      Philiprehberger::TypedHash.define do
+        key :name, String
+        nested :address do
+          key :street, String
+          key :city, String
+        end
+      end
+    end
+
+    it 'validates a valid nested hash' do
+      instance = schema.new(name: 'Alice', address: { street: '123 Main St', city: 'Springfield' })
+      expect(instance.valid?).to be(true)
+      expect(instance[:address][:street]).to eq('123 Main St')
+      expect(instance[:address][:city]).to eq('Springfield')
+    end
+
+    it 'reports errors for invalid nested fields' do
+      instance = schema.new(name: 'Alice', address: { street: 123, city: 'Springfield' })
+      expect(instance.valid?).to be(false)
+      expect(instance.errors).to include('address.street must be a String, got Integer')
+    end
+
+    it 'reports error when nested value is not a Hash' do
+      instance = schema.new(name: 'Alice', address: 'not a hash')
+      expect(instance.valid?).to be(false)
+      expect(instance.errors).to include('address must be a Hash, got String')
+    end
+
+    it 'reports error when required nested field is missing' do
+      instance = schema.new(name: 'Alice')
+      expect(instance.valid?).to be(false)
+      expect(instance.errors).to include('address is required')
+    end
+
+    it 'reports missing keys inside nested hash' do
+      instance = schema.new(name: 'Alice', address: { street: '123 Main St' })
+      expect(instance.valid?).to be(false)
+      expect(instance.errors).to include('address.city is required')
+    end
+
+    context 'with optional nested schema' do
+      let(:schema) do
+        Philiprehberger::TypedHash.define do
+          key :name, String
+          nested :metadata, optional: true do
+            key :source, String
+          end
+        end
+      end
+
+      it 'allows missing optional nested schema' do
+        instance = schema.new(name: 'Alice')
+        expect(instance.valid?).to be(true)
+        expect(instance[:metadata]).to be_nil
+      end
+
+      it 'validates optional nested schema when provided' do
+        instance = schema.new(name: 'Alice', metadata: { source: 'web' })
+        expect(instance.valid?).to be(true)
+        expect(instance[:metadata][:source]).to eq('web')
+      end
+    end
+
+    it 'converts nested instances in to_h' do
+      instance = schema.new(name: 'Alice', address: { street: '123 Main St', city: 'Springfield' })
+      hash = instance.to_h
+      expect(hash[:address]).to eq({ street: '123 Main St', city: 'Springfield' })
+      expect(hash[:address]).to be_a(Hash)
+    end
+  end
+
+  describe '#pick' do
+    let(:schema) do
+      Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer, optional: true
+        key :email, String, optional: true
+      end
+    end
+
+    it 'returns a new instance with only the specified keys' do
+      instance = schema.new(name: 'Alice', age: 30, email: 'alice@example.com')
+      picked = instance.pick(:name, :email)
+      expect(picked[:name]).to eq('Alice')
+      expect(picked[:email]).to eq('alice@example.com')
+      expect(picked[:age]).to be_nil
+    end
+
+    it 'does not mutate the original instance' do
+      instance = schema.new(name: 'Alice', age: 30, email: 'alice@example.com')
+      instance.pick(:name)
+      expect(instance[:age]).to eq(30)
+    end
+  end
+
+  describe '#omit' do
+    let(:schema) do
+      Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer, optional: true
+        key :email, String, optional: true
+      end
+    end
+
+    it 'returns a new instance without the specified keys' do
+      instance = schema.new(name: 'Alice', age: 30, email: 'alice@example.com')
+      omitted = instance.omit(:age, :email)
+      expect(omitted[:name]).to eq('Alice')
+      expect(omitted[:age]).to be_nil
+      expect(omitted[:email]).to be_nil
+    end
+
+    it 'does not mutate the original instance' do
+      instance = schema.new(name: 'Alice', age: 30, email: 'alice@example.com')
+      instance.omit(:age)
+      expect(instance[:age]).to eq(30)
+    end
+  end
+
+  describe 'JSON serialization' do
+    let(:schema) do
+      Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer
+      end
+    end
+
+    it 'serializes to JSON' do
+      instance = schema.new(name: 'Alice', age: 30)
+      json = instance.to_json
+      parsed = JSON.parse(json)
+      expect(parsed).to eq({ 'name' => 'Alice', 'age' => 30 })
+    end
+
+    it 'deserializes from JSON' do
+      json = '{"name":"Alice","age":30}'
+      instance = schema.from_json(json)
+      expect(instance.valid?).to be(true)
+      expect(instance[:name]).to eq('Alice')
+      expect(instance[:age]).to eq(30)
+    end
+
+    it 'roundtrips through JSON' do
+      original = schema.new(name: 'Bob', age: 25)
+      json = original.to_json
+      restored = schema.from_json(json)
+      expect(restored.to_h).to eq(original.to_h)
+    end
+
+    it 'validates deserialized data' do
+      json = '{"name":123,"age":"not_a_number"}'
+      instance = schema.from_json(json)
+      expect(instance.valid?).to be(false)
+    end
+  end
+
+  describe '#freeze' do
+    let(:schema) do
+      Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer
+      end
+    end
+
+    it 'prevents modification after freeze' do
+      instance = schema.new(name: 'Alice', age: 30)
+      instance.freeze
+      expect { instance[:name] = 'Bob' }.to raise_error(Philiprehberger::TypedHash::FrozenError)
+    end
+
+    it 'reports frozen state' do
+      instance = schema.new(name: 'Alice', age: 30)
+      expect(instance.frozen?).to be(false)
+      instance.freeze
+      expect(instance.frozen?).to be(true)
+    end
+
+    it 'allows reads after freeze' do
+      instance = schema.new(name: 'Alice', age: 30)
+      instance.freeze
+      expect(instance[:name]).to eq('Alice')
+    end
+
+    it 'returns self from freeze' do
+      instance = schema.new(name: 'Alice', age: 30)
+      expect(instance.freeze).to be(instance)
+    end
+  end
+
+  describe '#diff' do
+    let(:schema) do
+      Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer
+        key :email, String, optional: true
+      end
+    end
+
+    it 'returns changed keys with old and new values' do
+      a = schema.new(name: 'Alice', age: 30)
+      b = schema.new(name: 'Alice', age: 35)
+      result = a.diff(b)
+      expect(result).to eq({ age: { old: 30, new: 35 } })
+    end
+
+    it 'returns empty hash when instances are equal' do
+      a = schema.new(name: 'Alice', age: 30)
+      b = schema.new(name: 'Alice', age: 30)
+      expect(a.diff(b)).to eq({})
+    end
+
+    it 'detects added keys' do
+      a = schema.new(name: 'Alice', age: 30)
+      b = schema.new(name: 'Alice', age: 30, email: 'alice@example.com')
+      result = a.diff(b)
+      expect(result).to eq({ email: { old: nil, new: 'alice@example.com' } })
+    end
+
+    it 'detects removed keys' do
+      a = schema.new(name: 'Alice', age: 30, email: 'alice@example.com')
+      b = schema.new(name: 'Alice', age: 30)
+      result = a.diff(b)
+      expect(result).to eq({ email: { old: 'alice@example.com', new: nil } })
+    end
+
+    it 'detects multiple changes' do
+      a = schema.new(name: 'Alice', age: 30)
+      b = schema.new(name: 'Bob', age: 25)
+      result = a.diff(b)
+      expect(result.keys).to contain_exactly(:name, :age)
+    end
+  end
 end
