@@ -49,6 +49,17 @@ module Philiprehberger
         }
       end
 
+      # Return the declared top-level key names in definition order
+      #
+      # Only returns top-level keys — nested schemas are represented by their
+      # parent key, not by their inner fields. The returned Array is a fresh
+      # copy; mutating it does not affect the schema.
+      #
+      # @return [Array<Symbol>] the declared top-level key names in definition order
+      def keys
+        @fields.keys
+      end
+
       # Create a new typed hash instance from data
       #
       # @param data [Hash] the input data

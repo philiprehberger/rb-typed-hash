@@ -581,6 +581,44 @@ RSpec.describe Philiprehberger::TypedHash do
     end
   end
 
+  describe '#keys' do
+    it 'returns an empty array for an empty schema' do
+      schema = Philiprehberger::TypedHash.define {}
+      expect(schema.keys).to eq([])
+    end
+
+    it 'returns declared keys in definition order' do
+      schema = Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer
+        key :email, String, optional: true
+      end
+      expect(schema.keys).to eq(%i[name age email])
+    end
+
+    it 'only returns top-level keys for nested schemas' do
+      schema = Philiprehberger::TypedHash.define do
+        key :name, String
+        nested :address do
+          key :street, String
+          key :city, String
+        end
+        key :age, Integer
+      end
+      expect(schema.keys).to eq(%i[name address age])
+    end
+
+    it 'does not allow mutation through keys' do
+      schema = Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer
+      end
+      keys = schema.keys
+      keys.clear
+      expect(schema.keys).to eq(%i[name age])
+    end
+  end
+
   describe '#diff' do
     let(:schema) do
       Philiprehberger::TypedHash.define do
