@@ -142,6 +142,24 @@ updated = base.merge(age: 30)
 updated[:age]  # => 30
 ```
 
+### Schema introspection
+
+```ruby
+schema = Philiprehberger::TypedHash.define do
+  key :name, String
+  nested :address do
+    key :street, String
+  end
+  key :age, Integer
+end
+
+schema.keys  # => [:name, :address, :age]
+```
+
+`Schema#keys` returns the declared top-level key names in definition order.
+Nested schemas contribute only their parent key — inner fields are not
+included.
+
 ## API
 
 ### `TypedHash`
@@ -158,6 +176,7 @@ updated[:age]  # => 30
 | `nested :name, opts, &block` | Define a nested typed hash schema |
 | `#new(data)` | Create a typed hash instance |
 | `#from_json(str)` | Deserialize a JSON string into a typed hash instance |
+| `#keys` | Return the declared top-level key names in definition order |
 
 ### `Instance`
 
