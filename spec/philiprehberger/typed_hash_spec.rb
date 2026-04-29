@@ -662,4 +662,35 @@ RSpec.describe Philiprehberger::TypedHash do
       expect(result.keys).to contain_exactly(:name, :age)
     end
   end
+
+  describe '#key?' do
+    let(:schema) do
+      Philiprehberger::TypedHash.define do
+        key :name, String
+        key :age, Integer, optional: true
+      end
+    end
+
+    it 'returns true for a declared key with a value' do
+      instance = schema.new(name: 'Alice')
+      expect(instance.key?(:name)).to be(true)
+    end
+
+    it 'returns false for a declared optional key without a value' do
+      instance = schema.new(name: 'Alice')
+      expect(instance.key?(:age)).to be(false)
+    end
+
+    it 'returns false for an undeclared key' do
+      instance = schema.new(name: 'Alice')
+      expect(instance.key?(:foo)).to be(false)
+    end
+
+    it 'accepts string keys equivalently to symbol keys' do
+      instance = schema.new(name: 'Alice')
+      expect(instance.key?('name')).to be(true)
+      expect(instance.key?('age')).to be(false)
+      expect(instance.key?('foo')).to be(false)
+    end
+  end
 end

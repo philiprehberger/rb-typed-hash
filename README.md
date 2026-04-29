@@ -142,6 +142,20 @@ updated = base.merge(age: 30)
 updated[:age]  # => 30
 ```
 
+### Key Membership
+
+```ruby
+schema = Philiprehberger::TypedHash::Schema.new
+schema.key(:name, String)
+schema.key(:age, Integer, optional: true)
+
+instance = schema.new(name: 'Alice')
+instance.key?(:name)  # => true
+instance.key?('name') # => true (string form works)
+instance.key?(:age)   # => false
+instance.key?(:foo)   # => false
+```
+
 ### Schema introspection
 
 ```ruby
@@ -184,6 +198,7 @@ included.
 |--------|-------------|
 | `#[key]` | Access a value by key |
 | `#[key] = value` | Set a value by key (raises if frozen) |
+| `#key?(key)` | True when `key` is present in the instance data (accepts Symbol or String) |
 | `#valid?` | Check if the instance passes validation |
 | `#errors` | Return validation error messages |
 | `#to_h` | Convert to a plain hash |

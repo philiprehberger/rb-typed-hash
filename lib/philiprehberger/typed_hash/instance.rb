@@ -33,6 +33,14 @@ module Philiprehberger
         @data[key] = value
       end
 
+      # Hash-like membership predicate.
+      #
+      # @param key [Symbol, String] key name
+      # @return [Boolean]
+      def key?(key)
+        @data.key?(key.to_sym)
+      end
+
       # Check if the instance is valid
       #
       # @return [Boolean] true if no validation errors
